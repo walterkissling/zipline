@@ -73,7 +73,8 @@ def _run(handle_data,
          local_namespace,
          environ,
          blotter,
-         benchmark_returns):
+         benchmark_returns,
+         data_frame_loaders):
     """Run a backtest for the given algorithm.
 
     This is shared between the cli and :func:`zipline.run_algo`.
@@ -153,6 +154,8 @@ def _run(handle_data,
         equity_minute_reader=bundle_data.equity_minute_bar_reader,
         equity_daily_reader=bundle_data.equity_daily_bar_reader,
         adjustment_reader=bundle_data.adjustment_reader,
+        future_minute_reader=bundle_data.future_minute_bar_reader,
+        future_daily_reader=bundle_data.future_daily_bar_reader
     )
 
     pipeline_loader = USEquityPricingLoader(
@@ -160,12 +163,22 @@ def _run(handle_data,
         bundle_data.adjustment_reader,
     )
 
+    import sys
+    sys.path.append(r'C:\Users\walte\OneDrive - K Squared Capital\K Squared Capital\Trading Models\Code\Zipline\Fundamentals/')
+    from fundamentals import Fundamentals, loaders
+
+    def my_dispatcher(column):
+        return loaders[column]
+
     def choose_loader(column):
         if column in USEquityPricing.columns:
             return pipeline_loader
-        raise ValueError(
-            "No PipelineLoader registered for column %s." % column
-        )
+        try:
+            return my_dispatcher(column)
+        except:
+            raise ValueError(
+                "No PipelineLoader registered for column %s." % column
+            )
 
     if isinstance(metrics_set, six.string_types):
         try:
@@ -285,7 +298,8 @@ def run_algorithm(start,
                   extensions=(),
                   strict_extensions=True,
                   environ=os.environ,
-                  blotter='default'):
+                  blotter='default',
+                  data_frame_loaders=None):
     """
     Run a trading algorithm.
 
@@ -378,4 +392,5 @@ def run_algorithm(start,
         environ=environ,
         blotter=blotter,
         benchmark_returns=benchmark_returns,
+        data_frame_loaders=data_frame_loaders
     )

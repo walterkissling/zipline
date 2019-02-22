@@ -231,6 +231,7 @@ SID_TYPE_IDS = {
 CONTINUOUS_FUTURE_ROLL_STYLE_IDS = {
     'calendar': 0,
     'volume': 1,
+    'open_interest':2
 }
 
 CONTINUOUS_FUTURE_ADJUSTMENT_STYLE_IDS = {
@@ -244,7 +245,8 @@ def _encode_continuous_future_sid(root_symbol,
                                   offset,
                                   roll_style,
                                   adjustment_style):
-    s = struct.Struct("B 2B B B B 2B")
+    #s = struct.Struct("B 2B B B B 2B")
+    s = struct.Struct("B 5B B B B 2B")
     # B - sid type
     # 2B - root symbol
     # B - offset (could be packed smaller since offsets of greater than 12 are
@@ -259,15 +261,31 @@ def _encode_continuous_future_sid(root_symbol,
     # the A-Z values in 5-bit chunks.
     a = array.array('B', [0] * s.size)
     rs = bytearray(root_symbol, 'ascii')
+    if len(rs) < 3:
+        rs2 = 0
+        rs3 = 0
+        rs4 = 0
+    elif len(rs) < 4:
+        rs2 = rs[2]
+        rs3 = 0
+        rs4 = 0
+    elif len(rs) < 5:
+        rs2 = rs[2]
+        rs3 = rs[3]
+        rs4 = 0
     values = (SID_TYPE_IDS[ContinuousFuture],
               rs[0],
               rs[1],
+              rs2,
+              rs3,
+              rs4,
               offset,
               CONTINUOUS_FUTURE_ROLL_STYLE_IDS[roll_style],
               CONTINUOUS_FUTURE_ADJUSTMENT_STYLE_IDS[adjustment_style],
               0, 0)
     s.pack_into(a, 0, *values)
-    return int(binascii.hexlify(a), 16)
+#    return int(binascii.hexlify(a), 16)
+    return int(str(int(binascii.hexlify(a),16))[:10])
 
 
 class AssetFinder(object):
