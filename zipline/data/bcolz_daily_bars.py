@@ -52,7 +52,7 @@ logger = logbook.Logger('UsEquityPricing')
 
 OHLC = frozenset(['open', 'high', 'low', 'close'])
 US_EQUITY_PRICING_BCOLZ_COLUMNS = (
-    'open', 'high', 'low', 'close', 'volume', 'day', 'id'
+    'open', 'high', 'low', 'close', 'volume', 'day', 'id', 'open_interest'
 )
 
 UINT32_MAX = iinfo(np.uint32).max
@@ -140,6 +140,7 @@ class BcolzDailyBarWriter(object):
         'low': float64_dtype,
         'close': float64_dtype,
         'volume': float64_dtype,
+        'open_interest':float64_dtype
     }
 
     def __init__(self, filename, calendar, start_session, end_session):
@@ -365,11 +366,13 @@ class BcolzDailyBarWriter(object):
             return raw_data
 
         winsorise_uint32(raw_data, invalid_data_behavior, 'volume', *OHLC)
+        winsorise_uint32(raw_data, invalid_data_behavior, 'open_interest', *OHLC)
         processed = (raw_data[list(OHLC)] * 1000).round().astype('uint32')
         dates = raw_data.index.values.astype('datetime64[s]')
         check_uint32_safe(dates.max().view(np.int64), 'day')
         processed['day'] = dates.astype('uint32')
         processed['volume'] = raw_data.volume.astype('uint32')
+        processed['open_interest'] = raw_data.open_interest.astype('uint32')
         return ctable.fromdataframe(processed)
 
 
@@ -697,7 +700,7 @@ class BcolzDailyBarReader(SessionBarReader):
         """
         ix = self.sid_day_index(sid, dt)
         price = self._spot_col(field)[ix]
-        if field != 'volume':
+        if field != 'volume' and field !- 'open_interest':
             if price == 0:
                 return nan
             else:

@@ -37,7 +37,8 @@ from zipline.data.continuous_future_reader import (
 )
 from zipline.assets.roll_finder import (
     CalendarRollFinder,
-    VolumeRollFinder
+    VolumeRollFinder,
+    OpenInterestRollFinder
 )
 from zipline.data.dispatch_bar_reader import (
     AssetDispatchMinuteBarReader,
@@ -78,6 +79,7 @@ BASE_FIELDS = frozenset([
     "contract",
     "sid",
     "last_traded",
+    "open_interest"
 ])
 
 OHLCV_FIELDS = frozenset([
@@ -85,7 +87,7 @@ OHLCV_FIELDS = frozenset([
 ])
 
 OHLCVP_FIELDS = frozenset([
-    "open", "high", "low", "close", "volume", "price"
+    "open", "high", "low", "close", "volume", "price", "open_interest"
 ])
 
 HISTORY_FREQUENCIES = set(["1m", "1d"])
@@ -234,6 +236,11 @@ class DataPortal(object):
                 self.asset_finder,
                 aligned_future_session_reader,
             )
+            self._roll_finders['open_interest'] = OpenInterestRollFinder(
+                self.trading_calendar,
+                self.asset_finder,
+                aligned_future_session_reader,
+            )            
             aligned_session_readers[ContinuousFuture] = \
                 ContinuousFutureSessionBarReader(
                     aligned_future_session_reader,
@@ -448,6 +455,8 @@ class DataPortal(object):
                  session_label > asset.end_date):
             if field == "volume":
                 return 0
+            elif field == 'open_interest':
+                return 0
             elif field == "contract":
                 return None
             elif field != "last_traded":
@@ -600,7 +609,7 @@ class DataPortal(object):
         adjustment_ratios_per_asset = []
 
         def split_adj_factor(x):
-            return x if field != 'volume' else 1.0 / x
+            return x if field != 'volume' and field != 'open_interest' else 1.0 / x
 
         for asset in assets:
             adjustments_for_asset = []
@@ -613,7 +622,7 @@ class DataPortal(object):
                 elif adj_dt > perspective_dt:
                     break
 
-            if field != 'volume':
+            if field != 'volume' and field != 'open_interest':
                 merger_adjustments = self._get_adjustment_list(
                     asset, self._mergers_dict, "MERGERS"
                 )
@@ -695,7 +704,7 @@ class DataPortal(object):
             try:
                 return reader.get_value(asset.sid, dt, column)
             except NoDataOnDate:
-                if column != 'volume':
+                if column != 'volume' or column != 'open_interest':
                     return np.nan
                 else:
                     return 0
@@ -851,6 +860,9 @@ class DataPortal(object):
             elif field_to_use == 'volume':
                 minute_value = self._daily_aggregator.volumes(
                     assets, end_dt)
+            elif field_to_use == 'open_interest':
+                minute_value = self._daily_aggregator.closes(
+                    assets, end_dt)                    
             elif field_to_use == 'sid':
                 minute_value = [
                     int(self._get_current_contract(asset, end_dt))
@@ -1106,7 +1118,7 @@ class DataPortal(object):
         else:
             return_array = np.zeros((bar_count, len(assets)), dtype=dtype)
 
-        if field != "volume":
+        if field != "volume" and field != 'open_interest':
             # volumes default to 0, so we don't need to put NaNs in the array
             return_array[:] = np.NAN
 

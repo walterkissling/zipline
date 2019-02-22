@@ -141,7 +141,8 @@ class DailyHistoryAggregator(object):
             'high': None,
             'low': None,
             'close': None,
-            'volume': None
+            'volume': None,
+            'open_interest':None
         }
 
         # The int value is used for deltas to avoid extra computation from

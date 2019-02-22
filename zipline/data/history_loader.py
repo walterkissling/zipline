@@ -37,7 +37,7 @@ from zipline.utils.numpy_utils import float64_dtype
 from zipline.utils.pandas_utils import find_in_sorted_index, normalize_date
 
 # Default number of decimal places used for rounding asset prices.
-DEFAULT_ASSET_PRICE_DECIMALS = 3
+DEFAULT_ASSET_PRICE_DECIMALS = 4
 
 
 class HistoryCompatibleUSEquityAdjustmentReader(object):
@@ -95,7 +95,7 @@ class HistoryCompatibleUSEquityAdjustmentReader(object):
         start = normalize_date(dts[0])
         end = normalize_date(dts[-1])
         adjs = {}
-        if field != 'volume':
+        if field != 'volume' and field != 'open_interest':
             mergers = self._adjustments_reader.get_adjustments_for_sid(
                 'mergers', sid)
             for m in mergers:
@@ -133,7 +133,7 @@ class HistoryCompatibleUSEquityAdjustmentReader(object):
         for s in splits:
             dt = s[0]
             if start < dt <= end:
-                if field == 'volume':
+                if field == 'volume' or field == 'open_interest':
                     ratio = 1.0 / s[1]
                 else:
                     ratio = s[1]
@@ -205,7 +205,7 @@ class ContinuousFutureAdjustmentReader(object):
                          adj_value)
 
     def _get_adjustments_in_range(self, cf, dts, field):
-        if field == 'volume' or field == 'sid':
+        if field == 'volume' or field == 'sid' or field == 'open_interest':
             return {}
         if cf.adjustment is None:
             return {}
@@ -306,7 +306,7 @@ class HistoryLoader(with_metaclass(ABCMeta)):
     adjustment_reader : SQLiteAdjustmentReader
         Reader for adjustment data.
     """
-    FIELDS = ('open', 'high', 'low', 'close', 'volume', 'sid')
+    FIELDS = ('open', 'high', 'low', 'close', 'volume', 'sid', 'open_interest')
 
     def __init__(self, trading_calendar, reader, equity_adjustment_reader,
                  asset_finder,
@@ -358,7 +358,8 @@ class HistoryLoader(with_metaclass(ABCMeta)):
             if contract_sid is not None:
                 contract = self._asset_finder.retrieve_asset(contract_sid)
                 if contract.tick_size:
-                    return number_of_decimal_places(contract.tick_size)
+                    return DEFAULT_ASSET_PRICE_DECIMALS     
+                    #return number_of_decimal_places(contract.tick_size)
         return DEFAULT_ASSET_PRICE_DECIMALS
 
     def _ensure_sliding_windows(self, assets, dts, field,
@@ -436,7 +437,7 @@ class HistoryLoader(with_metaclass(ABCMeta)):
                 window_type = Float64Window
 
             view_kwargs = {}
-            if field == 'volume':
+            if field == 'volume' or field == 'open_interest':
                 array = array.astype(float64_dtype)
 
             for i, asset in enumerate(needed_assets):
