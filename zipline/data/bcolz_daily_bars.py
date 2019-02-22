@@ -700,7 +700,7 @@ class BcolzDailyBarReader(SessionBarReader):
         """
         ix = self.sid_day_index(sid, dt)
         price = self._spot_col(field)[ix]
-        if field != 'volume' and field !- 'open_interest':
+        if field != 'volume' and field != 'open_interest':
             if price == 0:
                 return nan
             else:
