@@ -116,7 +116,7 @@ def sharadar_bundle():
 
 #            #    ind = pd.Index(range(dividends.shape[0], dividends.shape[0] + div.shape[0]))
 #            #    div.set_index(ind, inplace=True)
-#            #    dividends = dividends.append(div)              
+#            #    dividends = dividends.append(div)
 
 #            # Append data to list
 #            data_to_write.append((sid, data_))
@@ -127,7 +127,7 @@ def sharadar_bundle():
 #        # Write splits and dividents
 #        dividends['sid'] = dividends['sid'].astype(int)
 #        splits['sid'] = splits['sid'].astype(int)
-        
+
 #        # Save data
         file = path_to_file + 'all_shar_data.pkl'
         metadata_file = path_to_file + 'metadata.csv'
@@ -136,7 +136,7 @@ def sharadar_bundle():
         #metadata.to_csv(metadata_file, index = False)
         #dividends.to_csv(path_to_file + 'dividends', index = False)
         with open(file, 'rb') as f:
-            data_to_write = pickle.load(f)
+                data_to_write = pickle.load(f)
         metadata = pd.read_csv(metadata_file)
         dividends = pd.read_csv(path_to_file + 'dividends', parse_dates = ['declared_date','ex_date',
                                                                            'pay_date','record_date'])
