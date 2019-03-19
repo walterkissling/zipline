@@ -32,7 +32,7 @@ def sharadar_bundle():
         with open(file, 'rb') as f:
             data_to_write = pickle.load(f)
         metadata = pd.read_csv(metadata_file)
-        dividends = pd.read_csv(path_to_file + 'dividends', parse_dates = ['declared_date','ex_date',
+        dividends = pd.read_csv(shar_folder + 'dividends.csv', parse_dates = ['declared_date','ex_date',
                                                                            'pay_date','record_date'])
         dividends = dividends.fillna(0)
         dividends = dividends[dividends.amount > 0]
