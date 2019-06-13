@@ -24,14 +24,14 @@ def sharadar_bundle():
                end_session):
 
         # Read in data
-        shar_folder = r'C:\Users\walte\OneDrive - K Squared Capital\K Squared Capital\Trading Models\Data\QuantRocket\Sharadar\Prices/'
+        shar_folder = r'D:\Sharadar/'#r'C:\Users\walte\OneDrive - K Squared Capital\K Squared Capital\Trading Models\Data\QuantRocket\Sharadar\Prices/'
 
         # Save data
         file = shar_folder + 'all_shar_data.pkl'
         metadata_file = shar_folder + 'metadata.csv'
         with open(file, 'rb') as f:
             data_to_write = pickle.load(f)
-        metadata = pd.read_csv(metadata_file)
+        metadata = pd.read_csv(metadata_file, index_col = 0)
         dividends = pd.read_csv(shar_folder + 'dividends.csv', parse_dates = ['declared_date','ex_date',
                                                                            'pay_date','record_date'])
         dividends = dividends.fillna(0)
