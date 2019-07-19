@@ -27,7 +27,7 @@ def futures_bundle():
         futures_folder = r'C:\Users\walte\OneDrive - K Squared Capital\K Squared Capital\Trading Models\Data\Norgate\Converted\Contracts/'
         
         # Get calendar
-        fut_calendar = get_calendar('FUT')
+        fut_calendar = get_calendar('us_futures')
         all_sessions = fut_calendar.all_sessions
 
         # List futures available
