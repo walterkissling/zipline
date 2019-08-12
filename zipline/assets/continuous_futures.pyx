@@ -43,7 +43,7 @@ def delivery_predicate(codes, contract):
     # root symbol + delivery code + year, e.g. PLF16
     # This check would be more robust if the future contract class had
     # a 'delivery_month' member.
-    delivery_code = contract.symbol[-3]
+    delivery_code = contract.symbol[-1]
     return delivery_code in codes
 
 march_cycle_delivery_predicate = partial(delivery_predicate,
